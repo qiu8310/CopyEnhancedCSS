@@ -1,0 +1,8 @@
+{
+  "durka.autoRun": [
+    {
+      "watchPattern": "**/src/{script.js,manifest.json}",
+      "command": "npm run build"
+    }
+  ]
+}

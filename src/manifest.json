@@ -1,0 +1,23 @@
+{
+  "identifier": "com.qiu8310.copyenhancedcss",
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
+  "commands": [
+    {
+      "script": "./script.js",
+      "name": "Copy CSS",
+      "identifier": "copyenhancedcss",
+      "handler": "copyCSS"
+    },
+    {
+      "script": "./script.js",
+      "name": "Copy Layer JSON",
+      "identifier": "copylayerjson",
+      "handler": "copyLayerJSON"
+    }
+  ],
+  "menu": {
+    "isRoot": false,
+    "items": ["copyenhancedcss", "copylayerjson"]
+  }
+}
