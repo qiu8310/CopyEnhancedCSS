@@ -1,22 +1,32 @@
+import { layer2json } from './layer2json';
 const sketch = require('sketch')
 
-export function copyLayerJSON() {
-  const document = sketch.fromNative(context.document)
-  copyToClipboard(JSON.stringify(document.selectedLayers.layers[0], null, 2));
+export function copyRawJSON() {
+  const layer = getLayer();
+  if (!layer) return
+  copyToClipboard(JSON.stringify(layer, null, 2));
+}
+export function copyJSON() {
+  const layer = getLayer();
+  if (!layer) return
+  copyToClipboard(JSON.stringify(layer2json(layer), null, 2));
+}
+export function copyCSS() {
+  const layer = getLayer();
+  if (layer) copyToClipboard(getEnhancedCSS(layer));
 }
 
-export function copyCSS() {
+function getLayer() {
   const document = sketch.fromNative(context.document)
   const { selectedLayers } = document;
   if (selectedLayers.length !== 1) {
-    sketch.UI.message('请先选择一个元素');
+    sketch.UI.message('Please select only one layer');
     return;
   }
-  const layer = selectedLayers.layers[0];
-  copyToClipboard(getEnhancedCSS(layer));
+  return selectedLayers.layers[0]
 }
 
-/** @param {import('../data/layer').Layer} layer */
+/** @param {import('./layer').Layer} layer */
 function getEnhancedCSS(layer) {
   const result = []
   const style = layer.style || {}
@@ -89,7 +99,7 @@ function getEnhancedCSS(layer) {
   }
   return result.map(l => l + '\n').join('')
 }
-/** @param {import('../data/layer').Border[]} borders */
+/** @param {import('./layer').Border[]} borders */
 function borders(borders) {
   const result = []
   const all = borders.filter(b => b.enabled)
@@ -103,8 +113,8 @@ function borders(borders) {
   return result
 }
 /**
- * @param {import('../data/layer').Style} style
- * @param {import('../data/layer').Frame} frame
+ * @param {import('./layer').Style} style
+ * @param {import('./layer').Frame} frame
  */
 function font(style, frame) {
   const result = []
@@ -161,7 +171,7 @@ function color2css(color) {
   }
   return color
 }
-/** @param {import('../data/layer').Fill} fill */
+/** @param {import('./layer').Fill} fill */
 function fill2css(fill) {
   const { fillType, color, gradient } = fill
   if (fillType === "Color") return color2css(color)
@@ -184,8 +194,8 @@ function fill2css(fill) {
 }
 /**
  * 计算渐变的角度
- * @param {import('../data/layer').CurveFrom} from
- * @param {import('../data/layer').CurveFrom} to
+ * @param {import('./layer').CurveFrom} from
+ * @param {import('./layer').CurveFrom} to
  * @returns
  */
 function calculateGradientAngle(from, to) {

@@ -15,7 +15,9 @@
     "build": "skpm-build",
     "watch": "skpm-build --watch",
     "start": "skpm-build --watch --run",
-    "runplugin": "sketchtool run ./plugin.sketchplugin copyenhancedcss --without-activating",
+    "copyCSS": "sketchtool run ./plugin.sketchplugin copyCSS --without-activating",
+    "copyJSON": "sketchtool run ./plugin.sketchplugin copyJSON --without-activating",
+    "copyRawJSON": "sketchtool run ./plugin.sketchplugin copyRawJSON --without-activating",
     "postinstall": "npm run build && skpm-link"
   },
   "devDependencies": {

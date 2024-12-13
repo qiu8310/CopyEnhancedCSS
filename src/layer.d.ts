@@ -14,8 +14,30 @@ export interface Layer {
   layers:        Layer[];
   points:        Point[];
   closed:        boolean;
+  // 生成属性
+  css:           CSS;
 }
+export interface CSS {
+  opacity?:      number;
+  blur?:         string
+  borders?:      string[]
+  backgrounds?:  string[]
+  shadows?:      string[]
+  borderRadius?: [number, number, number, number]
 
+  // 下面是 text 专有的
+  width?: string;
+  height?: string;
+  fontFamily?: string;
+  fontWeight?: string;
+  fontSize?: string;
+  lineHeight?: string;
+  letterSpacing?: string;
+  textAlign?: string;
+  textColor?: string;
+  ellipsisLineCount?: number
+
+}
 export interface Frame {
   x:      number;
   y:      number;

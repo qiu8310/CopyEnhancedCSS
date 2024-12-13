@@ -6,14 +6,20 @@
     {
       "script": "./script.js",
       "name": "Copy CSS",
-      "identifier": "copyenhancedcss",
+      "identifier": "copyCSS",
       "handler": "copyCSS"
     },
     {
       "script": "./script.js",
-      "name": "Copy Layer JSON",
-      "identifier": "copylayerjson",
-      "handler": "copyLayerJSON"
+      "name": "Copy JSON",
+      "identifier": "copyJSON",
+      "handler": "copyJSON"
+    },
+    {
+      "script": "./script.js",
+      "name": "Copy Raw JSON",
+      "identifier": "copyRawJSON",
+      "handler": "copyRawJSON"
     }
   ],
   "menu": {
