@@ -1,4 +1,4 @@
-import { isLayerOpacity, isLayerCovered, parseBlur, parseBorder, parseBorderRadius, parseColor, parseShadow, isLayerNoStyle, parseTextStyle } from './utils'
+import { isLayerOpacity, isLayerCovered, parseBlur, parseBorder, parseBorderRadius, parseBackground, parseShadow, isLayerNoStyle, parseTextStyle, isRectangleOverlap } from './utils'
 
 /** @typedef {import('./layer').Layer} Layer */
 
@@ -41,10 +41,11 @@ export function layer2json(layer) {
 /**
  * 移除空图层，或不可见图层（深度优先）
  * @param {Layer} layer
+ * @param {Layer} parent
  */
-function deepFilterDFS(layer) {
+function deepFilterDFS(layer, parent) {
   if (layer.layers) {
-    layer.layers = layer.layers.filter(l => deepFilterDFS(l))
+    layer.layers = layer.layers.filter(l => deepFilterDFS(l, layer))
   }
   // 类型是图片，但没有配图，不显示
   if (layer.type === 'Image' && layer.image == null) return false
@@ -57,8 +58,9 @@ function deepFilterDFS(layer) {
 /**
  * 移除空图层，或不可见图层（广度优先）
  * @param {Layer} layer
+ * @param {Layer} parent
  */
-function deepFilterNFS(layer) {
+function deepFilterNFS(layer, parent) {
   const isSqueezable = (l1, l2) => {
     // l2 坐标需要是 (0, 0)
     // l2 可以有样式（因为 l2 不会剔除）
@@ -86,9 +88,15 @@ function deepFilterNFS(layer) {
   }
   while (squeeze()) { continue }
 
+  // 判断当前节点是不是超出了父容器，超出的话也可以不用显示
+  if (parent && !isRectangleOverlap(
+    parent.frame,
+    {...layer.frame, x: parent.frame.x + layer.frame.x, y: parent.frame.y + layer.frame.y}
+  )) return false
+
   // 继续遍历（layers 可能为空）
   if (layer.layers) {
-    layer.layers = layer.layers.filter(l => deepFilterNFS(l))
+    layer.layers = layer.layers.filter(l => deepFilterNFS(l, layer))
   }
   return true
 }
@@ -108,18 +116,18 @@ function mapStyle(style) {
     if (blur) css.blur = blur
   }
   if (style.borders) {
-    const borders = style.borders.filter(b => b.enabled).map(parseBorder).filter(Boolean)
-    if (borders.length) css.borders = borders
+    const border = style.borders.filter(b => b.enabled).map(parseBorder).filter(Boolean)
+    if (border.length) css.border = border
   }
   if (style.fills) {
-    const backgrounds = style.fills.filter(b => b.enabled).map(parseColor).filter(Boolean)
-    if (backgrounds.length) css.backgrounds = backgrounds
+    const background = style.fills.filter(b => b.enabled).map(parseBackground).filter(Boolean)
+    if (background.length) css.background = background
   }
 
   const shadows = []
   if (style.shadows) shadows.push(...style.shadows.map(s => parseShadow(s)))
   if (style.innerShadows) shadows.push(...style.innerShadows.map(s => parseShadow(s, true)))
-  if (shadows.filter(Boolean).length) css.shadows = shadows.filter(Boolean)
+  if (shadows.filter(Boolean).length) css['box-shadow'] = shadows.filter(Boolean)
   return css
 }
 
@@ -145,7 +153,7 @@ function mapLayer(layer) {
   const css = {}
   if (layer.points) {
     const borderRadius = parseBorderRadius(layer)
-    if (borderRadius) css.borderRadius = borderRadius
+    if (borderRadius) css['border-radius'] = borderRadius
   }
 
   const baseCss = mapStyle(layer.style)
@@ -158,10 +166,10 @@ function mapLayer(layer) {
     // 有切图，则可以删除子图层
     if (layer.exportFormats.length) {
       delete layer.layers
-      layer.type = 'Slice' // 标记有切图
+      layer.type = 'Cut' // 标记有切图
     }
   }
-  if (layer.type !== 'Slice') delete layer.id // 只有切图才需要保存 id，其它字段 id 无用
+  if (layer.type !== 'Cut') delete layer.id // 只有切图才需要保存 id，其它字段 id 无用
   delete layer.exportFormats
   delete layer.points
   delete layer.selected
@@ -174,6 +182,7 @@ function mapLayer(layer) {
   delete layer.lineSpacing
   delete layer.style
   delete layer.fixedWidth
+  if (layer.name === (layer.text && layer.text.trim())) delete layer.text
   if (layer.frame) {
     layer.frame = mapFrame(layer.frame)
   }

@@ -19,24 +19,32 @@ export interface Layer {
 }
 export interface CSS {
   opacity?:      number;
+  'border-radius'?: string
+  'box-shadow'?:      string[]
+
+  // 以下三个属性包含 NOT_SUPPORT 前缀
   blur?:         string
-  borders?:      string[]
-  backgrounds?:  string[]
-  shadows?:      string[]
-  borderRadius?: [number, number, number, number]
+  border?:      string[]
+  background?:  string[]
 
   // 下面是 text 专有的
-  width?: string;
-  height?: string;
-  fontFamily?: string;
-  fontWeight?: string;
-  fontSize?: string;
-  lineHeight?: string;
-  letterSpacing?: string;
-  textAlign?: string;
-  textColor?: string;
-  ellipsisLineCount?: number
+  'width'?: string;
+  'height'?: string;
+  'font-family'?: string;
+  'font-weight'?: string;
+  'font-size'?: string;
+  'line-height'?: string;
+  'letter-spacing'?: string;
+  'text-align'?: string;
+  'text-color'?: string;
 
+  'overflow'?: string
+  'text-overflow'?: string
+  'white-spac'?: string
+  'display'?: string
+  'overflow'?: string
+  '-webkit-box-orient'?: string
+  '-webkit-line-clamp'?: string
 }
 export interface Frame {
   x:      number;

@@ -43,10 +43,33 @@ export function isLayerNoStyle(layer) {
   return !layer.css && layer.type === 'Group'
 }
 
+/**
+ * 判断某个点在不在矩形中
+ * @param {number} px
+ * @param {number} py
+ * @param {Layer['frame']} rect
+ * @returns
+ */
 function isPointInsideRectangle(px, py, rect) {
   return px >= rect.x && px <= rect.x + rect.width &&
          py >= rect.y && py <= rect.y + rect.height;
 }
+
+/**
+ * 判断两个矩形是否有重合
+ * @param {Layer['frame']} rectA
+ * @param {Layer['frame']} rectB
+ * @returns
+ */
+export function isRectangleOverlap(rectA, rectB) {
+  // 检查矩形 A 是否在矩形 B 的边界之外
+  const notOverlapX = rectA.x + rectA.width <= rectB.x || rectA.x >= rectB.x + rectB.width;
+  const notOverlapY = rectA.y + rectA.height <= rectB.y || rectA.y >= rectB.y + rectB.height;
+
+  // 如果矩形 A 在矩形 B 的边界之外，则它们不重叠
+  return !(notOverlapX || notOverlapY);
+}
+
 /**
  * 判断一个矩形是否被基于矩形给覆盖了
  * @param {Layer} layer
@@ -99,7 +122,9 @@ export function parseBorderRadius(layer) {
     layer.points.every(p => typeof p.cornerRadius === 'number') &&
     layer.points.some(p => p.cornerRadius !== 0)
   ) {
-    return layer.points.map(p => Math.round(p.cornerRadius))
+    const radius = layer.points.map(p => Math.round(p.cornerRadius))
+    if (radius.every(r => r === radius[0])) return px(radius[0])
+    else return radius.map(r => px(r)).join(' ')
   }
 }
 /**
@@ -109,7 +134,7 @@ export function parseBorder(border) {
   if (border && border.enabled && border.thickness > 0) {
     // 只支持纯色
     if (border.fillType === 'Color') {
-      return `${px(border.thickness)} solid ${parseColor(border)}`
+      return `${px(border.thickness)} solid ${color2css(border.color)}`
     } else {
       return `${NOT_SUPPORT}BORDER: ${border.fillType}`
     }
@@ -118,7 +143,7 @@ export function parseBorder(border) {
 /**
  * @param {Layer['style']['fills'][number]} fill
  */
-export function parseColor(fill) {
+export function parseBackground(fill) {
   const { fillType, color, gradient } = fill
   if (fill.enabled === false) return
   if (fillType === "Color") return color2css(color)
@@ -194,17 +219,26 @@ export function parseTextStyle(layer) {
   const fontWeightMap = { 2: 200, 3: 300, 5: 400, 6: 500, 8: 600 }
   if (style.fontFamily) {
     if (fontWeightMap[style.fontWeight] && style.fontFamily.toUpperCase().startsWith('PINGFANG')) {
-      result.fontWeight = fontWeightMap[style.fontWeight]
+      result['font-weight'] = fontWeightMap[style.fontWeight]
     } else {
-      result.fontFamily = style.fontFamily
+      result['font-family'] = style.fontFamily
     }
   }
-  if (style.fontSize) result.fontSize = px(style.fontSize)
-  if (style.lineHeight || frame.height) result.lineHeight = px(style.lineHeight || frame.height)
-  if (style.kerning > 0) result.letterSpacing = px(style.kerning, 2)
-  if (style.alignment === 'center') result.textAlign = 'center'
-  if (style.textColor) result.color = color2css(style.textColor)
-  if (ellipsisLineCount > 0) result.ellipsisLineCount = ellipsisLineCount
+  if (style.fontSize) result['font-size'] = px(style.fontSize)
+  if (style.lineHeight || frame.height) result['line-height'] = px(style.lineHeight || frame.height)
+  if (style.kerning > 0) result['letter-spacing'] = px(style.kerning, 2)
+  if (style.alignment === 'center') result['text-align'] = 'center'
+  if (style.textColor) result['color'] = color2css(style.textColor)
+  if (ellipsisLineCount === 1) {
+    result['overflow'] = 'hidden'
+    result['text-overflow'] = 'ellipsis'
+    result['white-spac'] = 'nowrap'
+  } else if (ellipsisLineCount > 1) {
+    result['display'] = '-webkit-box'
+    result['overflow'] = 'hidden'
+    result['-webkit-box-orient'] = 'vertical'
+    result['-webkit-line-clamp'] = ellipsisLineCount
+  }
   return result
 }
 
